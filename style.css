@@ -182,6 +182,12 @@ main{max-width:1200px;margin:0 auto;padding:28px 24px 80px;}
 .key-status.ok{color:var(--signal);}
 .key-status.fail{color:var(--danger);}
 .privacy-note{font-size:0.78rem;color:var(--text-dim);line-height:1.5;margin:0;}
+.get-key-link{
+  font-size:0.8rem;color:var(--amber);text-decoration:none;font-weight:600;
+  margin-top:-8px;
+}
+.get-key-link:hover{text-decoration:underline;}
+.key-caveat{font-size:0.76rem;color:var(--text-dim);margin:-4px 0 0;line-height:1.4;}
 
 /* ---------- Source / file lists ---------- */
 .source-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}

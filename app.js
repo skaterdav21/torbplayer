@@ -115,7 +115,17 @@ async function tbFetch(path, {method="GET", params=null, body=null} = {}){
       body: body ? JSON.stringify(body) : undefined,
     });
   }catch(err){
-    throw new Error("Could not reach TorBox from this browser. This is usually a CORS restriction from a static site origin — see the README for workarounds.");
+    // A network-level failure here (not a 4xx/5xx, an actual thrown TypeError)
+    // means the browser never got a response back at all. Two likely causes,
+    // most common first:
+    throw new Error(
+      "Couldn't reach the TorBox API from this browser. Most likely causes: " +
+      "(1) your TorBox account is on the Free plan — TorBox removed API access " +
+      "for Free accounts, only paid plans can use API keys, check torbox.app/settings; " +
+      "(2) TorBox's CORS policy is blocking requests from this site's origin, see the " +
+      "README for a proxy workaround. Open your browser's console (F12) and look for " +
+      "the actual failed request to tell which one it is."
+    );
   }
   let json;
   try{ json = await res.json(); }

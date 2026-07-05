@@ -19,10 +19,16 @@ it runs entirely in your browser and talks directly to TorBox and TMDB.
 
 ## Getting your API keys
 
-- **TorBox**: log into torbox.app → Settings → API, generate a key.
-- **TMDB**: create a free account at themoviedb.org → Settings → API →
-  request a key (the "API Key (v3 auth)" is the simplest, a v4 read token
-  also works).
+- **TorBox**: [torbox.app/settings](https://torbox.app/settings) → API section
+  → generate a key. **Requires a paid TorBox plan.** TorBox removed API
+  access for Free accounts, so if you're on Free the key either won't work
+  or won't exist yet — upgrade first.
+- **TMDB**: [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api)
+  → create a free account → request an API key → use the "API Key (v3 auth)"
+  value (a v4 read access token also works, the app detects which type you
+  pasted).
+
+Both links are also right in the app's Settings panel next to each field.
 
 ## Deploying to GitHub Pages
 
@@ -33,22 +39,26 @@ it runs entirely in your browser and talks directly to TorBox and TMDB.
 `.nojekyll` is included so GitHub Pages doesn't run its default Jekyll
 processing over the files.
 
-## A known rough edge: CORS
+## If "Test connection" fails on TorBox
 
-TorBox's API may or may not send permissive CORS headers for requests coming
-from a `github.io` origin, since it isn't the origin their own web app runs
-on. If Settings → "Test connection" fails with a network-level error (not an
-auth error), that's almost certainly what's happening. Two ways around it:
+Two different problems both show up as "couldn't reach TorBox," so check in
+this order:
 
-- Run the app from `localhost` instead while testing (many APIs are looser
-  about localhost, though this isn't guaranteed).
-- Put a small CORS-forwarding proxy in front of `api.torbox.app` (e.g. a
-  Cloudflare Worker you deploy yourself that just forwards headers through).
-  This still requires no traditional backend, a Worker is free at this scale.
+1. **Plan tier.** TorBox now requires a paid plan for any API access at all
+   — Free accounts get a network-level failure, not a clean 403, which looks
+   identical to a CORS block from the browser's side. Confirm your plan at
+   [torbox.app/settings](https://torbox.app/settings) first.
+2. **CORS.** If you're definitely on a paid plan and it still fails, open
+   the browser console (F12 → Console/Network tab) and look at the actual
+   failed request. If it shows a CORS error specifically (not a 401/403),
+   TorBox isn't sending permissive headers for a `github.io` origin. Fix by
+   putting a small CORS-forwarding proxy in front of `api.torbox.app` — a
+   Cloudflare Worker you deploy yourself that just forwards headers through
+   works well and is free at this scale, and still requires no traditional
+   backend.
 
-This app deliberately surfaces that failure mode with a specific message
-rather than a generic "something went wrong," so you'll know which case
-you're in.
+The app's error message points at both possibilities rather than guessing,
+since the browser can't always tell them apart on its own.
 
 ## Endpoint notes
 
