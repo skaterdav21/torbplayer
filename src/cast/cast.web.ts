@@ -36,20 +36,22 @@ export enum MediaStreamType {
   OTHER = 'other',
 }
 
-const device = (deviceId: string, friendlyName: string, modelName: string): Device => ({
+const device = (deviceId: string, friendlyName: string, modelName: string, ip: string): Device => ({
   deviceId,
   friendlyName,
   modelName,
   capabilities: ['VideoOut', 'AudioOut'],
   deviceVersion: '1',
   icons: [],
-  ipAddress: '192.168.1.50',
+  // Same shape the Android SDK reports (InetAddress.toString()).
+  ipAddress: `/${ip}`,
   isOnLocalNetwork: true,
 });
 
 const DEVICES = [
-  device('sim-living-room', 'Living Room TV', 'Google TV Streamer'),
-  device('sim-bedroom', 'Bedroom', 'Chromecast with Google TV'),
+  device('sim-living-room', 'Living Room TV', 'Google TV Streamer', '192.168.1.50'),
+  device('sim-bedroom', 'Bedroom', 'Chromecast with Google TV', '192.168.1.51'),
+  device('sim-den', 'Den', 'Chromecast with Google TV', '192.168.1.52'),
 ];
 
 interface SimState {

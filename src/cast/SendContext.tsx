@@ -4,6 +4,7 @@
  * If a Chromecast session is already open, the stream goes straight to it.
  * Otherwise the device picker opens; picking a device starts a session, and
  * once its media client shows up the queued stream is loaded onto it.
+ * While a watch party is running, streams go to every TV in it instead.
  */
 import { router } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -14,6 +15,7 @@ import type { StreamInfo } from '../lib/streamInfo';
 import { KEYS, loadJson, saveJson } from '../lib/storage';
 import { useToast } from '../components/Toast';
 import { useRecents } from '../state/RecentsContext';
+import { useParty } from './PartyContext';
 import {
   CastContext,
   MediaStreamType,
@@ -54,6 +56,8 @@ interface SendState {
   lastDeviceId?: string;
   send: (req: SendRequest, opts?: { chooseDevice?: boolean }) => void;
   pickDevice: (device: Device) => void;
+  /** Start a watch party on these TVs with the stream waiting in the picker. */
+  startPartyWith: (devices: Device[]) => void;
   openSystemDialog: () => void;
   cancel: () => void;
 }
@@ -96,6 +100,7 @@ export function SendProvider({ children }: { children: ReactNode }) {
   const castDevice = useCastDevice();
   const toast = useToast();
   const { add: addRecent } = useRecents();
+  const { party, startParty, sendToParty, endParty } = useParty();
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [pending, setPending] = useState<SendRequest | null>(null);
@@ -177,6 +182,10 @@ export function SendProvider({ children }: { children: ReactNode }) {
     (req: SendRequest, opts?: { chooseDevice?: boolean }) => {
       if (!req.info.url || phase === 'loading' || phase === 'connecting') return;
       clearConnectTimeout();
+      if (party && !opts?.chooseDevice) {
+        sendToParty(req);
+        return;
+      }
       if (client && !opts?.chooseDevice) {
         load(client, req);
         return;
@@ -184,13 +193,25 @@ export function SendProvider({ children }: { children: ReactNode }) {
       setPending(req);
       setPhase('picking');
     },
-    [client, phase, load],
+    [client, phase, load, party, sendToParty],
+  );
+
+  const startPartyWith = useCallback(
+    (devices: Device[]) => {
+      if (!pending) return;
+      startParty(devices, pending);
+      setPending(null);
+      setPhase('idle');
+    },
+    [pending, startParty],
   );
 
   const pickDevice = useCallback(
     async (device: Device) => {
       setLastDeviceId(device.deviceId);
       saveJson(KEYS.lastDevice, device.deviceId);
+      // Going back to one TV: drop the party but leave the TVs as they are.
+      if (party) endParty({ stopTvs: false });
 
       if (client && castDevice?.deviceId === device.deviceId) {
         if (pending) load(client, pending);
@@ -219,7 +240,7 @@ export function SendProvider({ children }: { children: ReactNode }) {
         toast(`Couldn't connect: ${err instanceof Error ? err.message : String(err)}`, 'error');
       }
     },
-    [client, castDevice, pending, load, toast],
+    [client, castDevice, pending, load, toast, party, endParty],
   );
 
   const openSystemDialog = useCallback(() => {
@@ -253,10 +274,11 @@ export function SendProvider({ children }: { children: ReactNode }) {
       lastDeviceId,
       send,
       pickDevice,
+      startPartyWith,
       openSystemDialog,
       cancel,
     }),
-    [phase, pending, connectingTo, lastDeviceId, send, pickDevice, openSystemDialog, cancel],
+    [phase, pending, connectingTo, lastDeviceId, send, pickDevice, startPartyWith, openSystemDialog, cancel],
   );
 
   return <SendContext.Provider value={value}>{children}</SendContext.Provider>;

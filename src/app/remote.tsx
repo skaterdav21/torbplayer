@@ -16,18 +16,17 @@ import {
   useRemoteMediaClient,
   useStreamPosition,
 } from '../cast/cast';
+import { useParty } from '../cast/PartyContext';
+import { PartyRemote } from '../components/PartyRemote';
+import { clock } from '../lib/time';
 import { colors, radius, space, type } from '../theme';
 
-function clock(seconds?: number | null): string {
-  if (seconds == null || !Number.isFinite(seconds)) return '--:--';
-  const s = Math.max(0, Math.floor(seconds));
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = String(s % 60).padStart(2, '0');
-  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
+export default function RemoteScreen() {
+  const { party } = useParty();
+  return party ? <PartyRemote /> : <SingleRemote />;
 }
 
-export default function RemoteScreen() {
+function SingleRemote() {
   const client = useRemoteMediaClient();
   const session = useCastSession();
   const status = useMediaStatus();

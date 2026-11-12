@@ -4,6 +4,7 @@ export const KEYS = {
   addons: 'beam.addons.v1',
   recents: 'beam.recents.v1',
   lastDevice: 'beam.lastDevice.v1',
+  partyDevices: 'beam.partyDevices.v1',
 } as const;
 
 export async function loadJson<T>(key: string, fallback: T): Promise<T> {

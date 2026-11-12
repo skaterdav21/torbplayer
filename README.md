@@ -25,6 +25,22 @@ anything itself: it finds the link and hands it to the TV.
    controls, which include track selection. A small "now casting" bar stays at
    the bottom of every screen.
 
+### Watch party
+
+To play the same thing on several TVs at once, long-press a source (or tap
+one when nothing is connected) and switch the sheet to **Watch party**. Tick
+two or more TVs and start. Every TV loads the stream paused, and once they've
+all buffered they're told to play at the same moment. From then on, play,
+pause, ±10s/±30s and seeking act on every TV together. The remote shows how
+far each TV has drifted from the first one, and **Re-sync** lines them all up
+again. Each TV has its own volume. While a party is running, tapping any
+source plays it on the whole party.
+
+The Android Cast SDK can only talk to one TV at a time, so for a party Beam
+connects to each TV directly with the Cast protocol (`src/lib/castv2/`). Cast
+devices accept several controllers at once, so this works alongside the
+normal one-TV mode.
+
 Each source row shows quality, size, codec, audio, whether it's cached on your
 debrid service, and a warning when a Chromecast is likely to struggle with it
 (DTS/TrueHD audio, Dolby Vision, AVI files, links that need special headers).
@@ -90,10 +106,13 @@ src/
     cast.ts              the only import of react-native-google-cast
     cast.web.ts          simulated Chromecast for the browser preview
     SendContext.tsx      "send this to a TV": device picker, connect, load
+    PartyContext.tsx     the active watch party
+    partySocket.ts       TLS sockets to TVs for parties (react-native-tcp-socket)
   lib/
     stremio.ts           Stremio addon protocol client
     cinemeta.ts          search, details, episode lists
     streamInfo.ts        parses addon results: quality, size, cache, cast warnings
+    castv2/              Cast protocol client, watch-party sync, simulated TV
   components/, hooks/, state/
 ```
 
