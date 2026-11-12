@@ -7,6 +7,8 @@ Beam is an Android phone app: search (Cinemeta) → pick a source (the user's St
 - Only `src/cast/cast.ts` may import `react-native-google-cast`. `src/cast/cast.web.ts` is a simulated stand-in with the same exports so `npm run web` works; keep the two in sync.
 - Addon/stream parsing lives in `src/lib/` as plain TypeScript with Jest tests next to it. Avoid the `URL` class and `\p{...}` regexes there, since React Native/Hermes support for them is incomplete.
 - Addon base URLs can contain API keys: never log them or show more than `hostOf(url)`.
+- The Cast SDK is pinned in `app.json` (`androidPlayServicesCastFrameworkVersion`). 23.x is compiled with Kotlin 2.4 and breaks the app's Kotlin 2.2 compile, so only bump it together with React Native/Expo.
+- `.github/workflows/build-apk.yml` builds the APK on every push and publishes it as the `beam-latest` release.
 - Before finishing: `npm test`, `npm run typecheck`, `npm run lint`. `npx expo export --platform android` checks that the Hermes bundle compiles.
 
 ## Expo has changed — do not trust your training data
