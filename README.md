@@ -43,19 +43,19 @@ the app only ever displays the host name.
 
 ## Installing on your Android phone
 
-Beam uses a native Chromecast library, so it **does not run in Expo Go**. Build
-an APK in Expo's cloud instead. You need a free Expo account; Android Studio
-isn't needed.
+On your phone, open
+**https://github.com/skaterdav21/torbplayer/releases/latest/download/beam.apk**,
+then open the downloaded file. The first time, Android asks you to allow
+installs from your browser. The phone and the TV must be on the same Wi-Fi.
 
-```bash
-npm install
-npx eas-cli@latest login
-npm run build:apk          # eas build --platform android --profile preview
-```
+GitHub Actions builds that APK on every push
+(`.github/workflows/build-apk.yml`) and replaces the `beam-latest` release, so
+the link always gets the newest build. Each new APK installs over the old one
+and keeps your addons.
 
-When the build finishes, EAS gives you a link and QR code for the `.apk`. Open
-it on the phone and allow installing from that source when Android asks. The
-phone and the TV must be on the same Wi-Fi.
+Beam uses a native Chromecast library, so it **does not run in Expo Go**. If you
+ever want Expo's cloud build instead, `npm run build:apk` does that (needs a
+free Expo account).
 
 ## Development
 
