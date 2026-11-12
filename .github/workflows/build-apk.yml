@@ -1,0 +1,76 @@
+# Builds an installable Beam APK on every push and publishes it as the
+# "beam-latest" release, so the newest build is always at:
+#   https://github.com/<owner>/<repo>/releases/latest/download/beam.apk
+#
+# The APK is signed with the standard React Native debug key, which is fine
+# for installing on your own phone. Every build uses the same key, so a new
+# APK installs over the old one and keeps your addons.
+
+name: Build APK
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-apk
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Android project
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Build release APK
+        working-directory: android
+        # Phones only (64- and 32-bit ARM); emulator architectures are skipped to halve build time.
+        run: >
+          ./gradlew assembleRelease --no-daemon
+          -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+          -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g"
+
+      - name: Collect APK
+        run: |
+          mkdir -p out
+          cp android/app/build/outputs/apk/release/app-release.apk out/beam.apk
+          ls -lh out/beam.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: beam-apk
+          path: out/beam.apk
+
+      - name: Publish as the beam-latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete beam-latest --cleanup-tag --yes || true
+          gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/beam-latest" 2>/dev/null || true
+          gh release create beam-latest out/beam.apk \
+            --target "$GITHUB_SHA" \
+            --title "Beam (latest build)" \
+            --notes "Built from \`${GITHUB_REF_NAME}\` at ${GITHUB_SHA::7}. Download **beam.apk** on your Android phone and open it to install. Your phone will ask you to allow installs from your browser the first time."
