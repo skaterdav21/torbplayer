@@ -37,13 +37,15 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: gradle
 
       - name: Install dependencies
         run: npm ci
 
       - name: Generate Android project
         run: npx expo prebuild --platform android --no-install
+
+      # After prebuild, since the Gradle files don't exist until then.
+      - uses: gradle/actions/setup-gradle@v4
 
       - name: Build release APK
         working-directory: android
